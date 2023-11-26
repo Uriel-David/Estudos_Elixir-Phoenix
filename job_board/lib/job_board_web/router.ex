@@ -19,14 +19,7 @@ defmodule JobBoardWeb.Router do
 
   scope "/", JobBoardWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", JobBoardWeb do
-  #   pipe_through :api
-  # end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:job_board, :dev_routes) do
@@ -80,6 +73,11 @@ defmodule JobBoardWeb.Router do
       on_mount: [{JobBoardWeb.UserAuth, :mount_current_user}] do
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
+
+      live "/", HomeListingsLive, :index
+      live "/view/:id", JobListingLive, :index
+      live "/listings/new", NewListingLive, :index
+      live "/listings/my", MyListingsLive, :index
     end
   end
 end

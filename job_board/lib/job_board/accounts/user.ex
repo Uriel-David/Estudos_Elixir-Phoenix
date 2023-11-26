@@ -1,12 +1,15 @@
 defmodule JobBoard.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
+  alias JobBoard.Jobs.Listing
 
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
+
+    has_many :listings, Listing
 
     timestamps()
   end
@@ -66,6 +69,8 @@ defmodule JobBoard.Accounts.User do
 
     if hash_password? && password && changeset.valid? do
       changeset
+      # If using Bcrypt, then further validate it is at most 72 bytes long
+      |> validate_length(:password, max: 72, count: :bytes)
       # Hashing could be done with `Ecto.Changeset.prepare_changes/2`, but that
       # would keep the database transaction open longer and hurt performance.
       |> put_change(:hashed_password, Pbkdf2.hash_pwd_salt(password))
@@ -131,7 +136,7 @@ defmodule JobBoard.Accounts.User do
   Verifies the password.
 
   If there is no user or the user doesn't have a password, we call
-  `Pbkdf2.no_user_verify/0` to avoid timing attacks.
+  `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
   def valid_password?(%JobBoard.Accounts.User{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
